@@ -24,9 +24,13 @@
  *               'vo.example01.org',
  *               'vo.example02.org',
  *           ),
+ *           'role_urn_namespace' => 'urn:mace:example.org',
+ *           'role_authority' => 'www.example.org',
+ *           'defaultIssuerDn' => 'IGTF',
  *       ),
  *
  * @author Nicolas Liampotis <nliam@grnet.gr>
+ * @author nikosev <nikos.ev@hotmail.com>
  */
 class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends SimpleSAML_Auth_ProcessingFilter
 {
@@ -59,6 +63,12 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
     private $defaultRoles = array();
 
     private $tableNames = array();
+
+    private $roleUrnNamespace;
+
+    private $roleAuthority;
+
+    private $defaultIssuerDn;
 
     public function __construct($config, $reserved)
     {
@@ -124,6 +134,36 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
             }
             $this->tableNames = $config['tableNames'];
         }
+
+        if (array_key_exists('role_urn_namespace', $config)) {
+            if (!is_string($config['role_urn_namespace'])) {
+                SimpleSAML_Logger::error(
+                    "[attrauthvoms][CertEntitlement] Configuration error: 'role_urn_namespace' not a string literal");
+                throw new SimpleSAML_Error_Exception(
+                    "attrauthvoms configuration error: 'role_urn_namespace' not a string literal");
+            }
+            $this->roleUrnNamespace = $config['role_urn_namespace'];
+        }
+
+        if (array_key_exists('role_authority', $config)) {
+            if (!is_string($config['role_authority'])) {
+                SimpleSAML_Logger::error(
+                    "[attrauthvoms][CertEntitlement] Configuration error: 'role_authority' not a string literal");
+                throw new SimpleSAML_Error_Exception(
+                    "attrauthvoms configuration error: 'role_authority' not a string literal");
+            }
+            $this->roleAuthority = $config['role_authority'];
+        }
+
+        if (array_key_exists('defaultIssuerDn', $config)) {
+            if (!is_string($config['defaultIssuerDn'])) {
+                SimpleSAML_Logger::error(
+                    "[attrauthvoms][CertEntitlement] Configuration error: 'defaultIssuerDn' not a string literal");
+                throw new SimpleSAML_Error_Exception(
+                    "attrauthvoms configuration error: 'defaultIssuerDn' not a string literal");
+            }
+            $this->defaultIssuerDn = $config['defaultIssuerDn'];
+        }
     }
 
     public function process(&$state)
@@ -160,24 +200,24 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
                     if (strpos($vo['vo_id'], ":role=") !== false) {
                         $fqan = explode(":role=", $vo['vo_id']);
                         $entitlement =
-                            "urn:mace:egi.eu"               // URN namespace
-                            . ":group:"                     // group
-                            . urlencode($fqan[0]) . ":"     // VO
-                            . "role=" . $fqan[1] . "#"      // role
-                            . "aai.egi.eu";                 // AA FQDN TODO
+                            $this->roleUrnNamespace                 // URN namespace
+                            . ":group:"                             // group
+                            . urlencode($fqan[0]) . ":"             // VO
+                            . "role=" . urlencode($fqan[1]) . "#"   // role
+                            . $this->roleAuthority;                 // AA FQDN TODO
                     } else {
                         foreach ($this->defaultRoles as $role) {
                             $entitlement =
-                                "urn:mace:egi.eu"               // URN namespace
-                                . ":group:"                     // group
-                                . urlencode($vo['vo_id']) . ":" // VO
-                                . "role=" . $role . "#"         // role
-                                . "aai.egi.eu";                 // AA FQDN TODO
+                                $this->roleUrnNamespace             // URN namespace
+                                . ":group:"                         // group
+                                . urlencode($vo['vo_id']) . ":"     // VO
+                                . "role=" . urlencode($role) . "#"  // role
+                                . $this->roleAuthority;             // AA FQDN TODO
                         }
                     }
                     $jsonEntitlement= "{"
                         . "\"cert_subject_dn\": \"" . $certificate['subject'] . "\","
-                        . "\"cert_iss\": \"" . (empty($certificate['issuer']) ? "IGTF" : $certificate['issuer']) . "\","
+                        . "\"cert_iss\": \"" . (empty($certificate['issuer']) ? $this->defaultIssuerDn : $certificate['issuer']) . "\","
                         . "\"eduperson_entitlement\": \"" . $entitlement . "\""
                         . "}";
                     SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement]: jsonEntitlement=" . var_export($jsonEntitlement, true));
