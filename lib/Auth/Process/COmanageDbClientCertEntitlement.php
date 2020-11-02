@@ -205,6 +205,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
                             . urlencode($fqan[0]) . ":"             // VO
                             . "role=" . urlencode($fqan[1]) . "#"   // role
                             . $this->roleAuthority;                 // AA FQDN TODO
+                        $certEntitlements = $this->getJsonEntitlement($certEntitlements, $entitlement, $certificate);
                     } else {
                         foreach ($this->defaultRoles as $role) {
                             $entitlement =
@@ -213,15 +214,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
                                 . urlencode($vo['vo_id']) . ":"     // VO
                                 . "role=" . urlencode($role) . "#"  // role
                                 . $this->roleAuthority;             // AA FQDN TODO
+                            $certEntitlements = $this->getJsonEntitlement($certEntitlements, $entitlement, $certificate);
                         }
                     }
-                    $jsonEntitlement= "{"
-                        . "\"cert_subject_dn\": \"" . $certificate['subject'] . "\","
-                        . "\"cert_iss\": \"" . (empty($certificate['issuer']) ? $this->defaultIssuerDn : $certificate['issuer']) . "\","
-                        . "\"eduperson_entitlement\": \"" . $entitlement . "\""
-                        . "}";
-                    SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement]: jsonEntitlement=" . var_export($jsonEntitlement, true));
-                    array_push($certEntitlements, $jsonEntitlement);
                 }
             }
             if (count($certEntitlements) > 0) {
@@ -301,6 +296,17 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
         }
 
         return $result;
+    }
+    
+    private function getJsonEntitlement($entitlementArray, $entitlementValue, $certificate)
+    {
+        $jsonEntitlement= "{"
+            . "\"cert_subject_dn\": \"" . $certificate['subject'] . "\","
+            . "\"cert_iss\": \"" . (empty($certificate['issuer']) ? $this->defaultIssuerDn : $certificate['issuer']) . "\","
+            . "\"eduperson_entitlement\": \"" . $entitlementValue . "\""
+            . "}";
+        SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement]: jsonEntitlement=" . var_export($jsonEntitlement, true));
+        return array_merge($entitlementArray, [$jsonEntitlement]);
     }
 
     private function showException($e)
