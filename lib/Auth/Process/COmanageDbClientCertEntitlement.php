@@ -41,18 +41,10 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
     private $attributeName = 'certEntitlement';
 
-    private $certificateQuery = 'SELECT'
-        . ' DISTINCT(subject),'
-        . ' issuer'
-        . ' FROM cm_certs'
-        . ' WHERE cert_id IS NULL'
-        . ' AND NOT deleted'
-        . ' AND subject IN {SUBJECTDNS}'
-        . ' GROUP BY subject,'
-        . ' issuer';
-
     private $voQuery = 'SELECT'
-        . ' DISTINCT(vo_id)'
+        . ' subject,'
+        . ' issuer,'
+        . ' vo_id'
         . ' FROM :tableName'
         . ' WHERE'
         . ' subject = :subject';
@@ -195,12 +187,11 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
                 return;
             }
             $userIds = $state['Attributes'][$this->userIdAttribute];
-            $userCertificates = $this->getCertificates($userIds);
             $certEntitlements = [];
-            $totalVos = [];
-            foreach ($userCertificates as $certificate) {
+            foreach ($userIds as $userId) {
+                $totalVos = [];
                 foreach ($this->tableNames as $tableName) {
-                    $vos = $this->getVOs($certificate['subject'], $tableName);
+                    $vos = $this->getVOs($userId, $tableName);
                     $totalVos = array_merge($totalVos, $vos);
                 }
                 SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement]: vos=" . var_export($totalVos, true));
@@ -217,7 +208,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
                             . urlencode($fqan[0]) . ":"             // VO
                             . "role=" . urlencode($fqan[1]) . "#"   // role
                             . $this->roleAuthority;                 // AA FQDN TODO
-                        $certEntitlements = $this->getJsonEntitlement($certEntitlements, $entitlement, $certificate);
+                        $certEntitlements = $this->getJsonEntitlement($certEntitlements, $entitlement, $vo['subject'], $vo['issuer']);
                     } else {
                         foreach ($this->defaultRoles as $role) {
                             $entitlement =
@@ -226,7 +217,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
                                 . urlencode($vo['vo_id']) . ":"     // VO
                                 . "role=" . urlencode($role) . "#"  // role
                                 . $this->roleAuthority;             // AA FQDN TODO
-                            $certEntitlements = $this->getJsonEntitlement($certEntitlements, $entitlement, $certificate);
+                            $certEntitlements = $this->getJsonEntitlement($certEntitlements, $entitlement, $vo['subject'], $vo['issuer']);
                         }
                         // create entitlement without role
                         if ($this->allowEmptyRole) {
@@ -235,7 +226,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
                                 . ":group:"                         // group
                                 . urlencode($vo['vo_id']) . "#"     // VO
                                 . $this->roleAuthority;             // AA FQDN TODO
-                            $certEntitlements = $this->getJsonEntitlement($certEntitlements, $entitlement, $certificate);
+                            $certEntitlements = $this->getJsonEntitlement($certEntitlements, $entitlement, $vo['subject'], $vo['issuer']);
                         }
                     }
                 }
@@ -250,43 +241,6 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
         } catch (\Exception $e) {
             $this->showException($e);
         }
-    }
-
-    private function getCertificates($userIds)
-    {
-        SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement] getVOs: userId="
-            . var_export($userIds, true));
-
-        $query = $this->certificateQuery;
-        $i = 1;
-        $qPart = [];
-        foreach ($userIds as $id) {
-            $qPart[] = ':subject' . $i++;
-        }
-        $conditions = '(' . implode(', ', $qPart) . ')';
-        $query = str_replace("{SUBJECTDNS}", $conditions, $query);
-
-        $queryParams = [];
-        $i = 1;
-        foreach ($userIds as $id) {
-            $queryParams['subject' . $i++] = array($id, PDO::PARAM_STR);
-        }
-
-        $result = array();
-        $db = SimpleSAML\Database::getInstance();
-        $stmt = $db->read($query, $queryParams);
-        if ($stmt->execute()) {
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $result[] = $row;
-            }
-            SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement] getVOs: result="
-                . var_export($result, true));
-            return $result;
-        } else {
-            throw new Exception('Failed to communicate with COmanage Registry: '.var_export($db->getLastError(), true));
-        }
-
-        return $result;
     }
 
     private function getVOs($userId, $tableName)
@@ -319,11 +273,11 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
         return $result;
     }
     
-    private function getJsonEntitlement($entitlementArray, $entitlementValue, $certificate)
+    private function getJsonEntitlement($entitlementArray, $entitlementValue, $subjectDn, $issuerDn)
     {
         $jsonEntitlement= "{"
-            . "\"cert_subject_dn\": \"" . $certificate['subject'] . "\","
-            . "\"cert_iss\": \"" . (empty($certificate['issuer']) ? $this->defaultIssuerDn : $certificate['issuer']) . "\","
+            . "\"cert_subject_dn\": \"" . $subjectDn . "\","
+            . "\"cert_iss\": \"" . (empty($issuerDn) ? $this->defaultIssuerDn : $issuerDn) . "\","
             . "\"eduperson_entitlement\": \"" . $entitlementValue . "\""
             . "}";
         SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement]: jsonEntitlement=" . var_export($jsonEntitlement, true));
