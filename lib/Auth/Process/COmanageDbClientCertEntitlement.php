@@ -42,8 +42,8 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
     private $attributeName = 'certEntitlement';
 
     private $certificateQuery = 'SELECT'
-        . ' DISTINCT(subject),'
-        . ' issuer'
+    . ' DISTINCT(subject),'
+    . ' issuer'
         . ' FROM cm_certs'
         . ' WHERE cert_id IS NULL'
         . ' AND NOT deleted'
@@ -61,6 +61,8 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
     private $voBlacklist = array();
 
     private $defaultRoles = array();
+    
+    private $allowEmptyRole = false;
 
     private $tableNames = array();
 
@@ -164,6 +166,16 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
             }
             $this->defaultIssuerDn = $config['defaultIssuerDn'];
         }
+
+        if (array_key_exists('allowEmptyRole', $config)) {
+            if (!is_bool($config['allowEmptyRole'])) {
+                SimpleSAML_Logger::error(
+                    "[attrauthvoms][CertEntitlement] Configuration error: 'allowEmptyRole' not boolean");
+                throw new SimpleSAML_Error_Exception(
+                    "attrauthvoms configuration error: 'allowEmptyRole' not a string literal");
+            }
+            $this->allowEmptyRole = $config['allowEmptyRole'];
+        }
     }
 
     public function process(&$state)
@@ -213,6 +225,15 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
                                 . ":group:"                         // group
                                 . urlencode($vo['vo_id']) . ":"     // VO
                                 . "role=" . urlencode($role) . "#"  // role
+                                . $this->roleAuthority;             // AA FQDN TODO
+                            $certEntitlements = $this->getJsonEntitlement($certEntitlements, $entitlement, $certificate);
+                        }
+                        // create entitlement without role
+                        if ($this->allowEmptyRole) {
+                            $entitlement =
+                                $this->roleUrnNamespace             // URN namespace
+                                . ":group:"                         // group
+                                . urlencode($vo['vo_id']) . "#"     // VO
                                 . $this->roleAuthority;             // AA FQDN TODO
                             $certEntitlements = $this->getJsonEntitlement($certEntitlements, $entitlement, $certificate);
                         }
