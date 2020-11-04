@@ -11,7 +11,7 @@
  *           'class' => 'attrauthvoms:COmanageDbClientCertEntitlement',
  *           'userIdAttribute' => 'distinguishedName',
  *           'attributeName' => 'certEntitlement',
- *           'blacklist' => array(
+ *           'spWhitelist' => array(
  *               'https://aai-dev.egi.eu/registry/shibboleth',
  *               'https://snf-766637.vm.okeanos.grnet.gr/Shibboleth.sso/Metadata',
  *               'https://am02.pilots.aarc-project.eu/shibboleth',
@@ -35,15 +35,15 @@
 class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends SimpleSAML_Auth_ProcessingFilter
 {
     // List of SP entity IDs that should be excluded from this filter.
-    private $blacklist = array();
+    private $spWhitelist = array();
 
     private $userIdAttribute = 'distinguishedName';
 
     private $attributeName = 'certEntitlement';
 
     private $certificateQuery = 'SELECT'
-    . ' DISTINCT(subject),'
-    . ' issuer'
+        . ' DISTINCT(subject),'
+        . ' issuer'
         . ' FROM cm_certs'
         . ' WHERE cert_id IS NULL'
         . ' AND NOT deleted'
@@ -97,14 +97,14 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
             $this->attributeName = $config['attributeName'];
         }
 
-        if (array_key_exists('blacklist', $config)) {
-            if (!is_array($config['blacklist'])) {
+        if (array_key_exists('spWhitelist', $config)) {
+            if (!is_array($config['spWhitelist'])) {
                 SimpleSAML_Logger::error(
-                    "[attrauthvoms][CertEntitlement] Configuration error: 'blacklist' not an array");
+                    "[attrauthvoms][CertEntitlement] Configuration error: 'spWhitelist' not an array");
                 throw new SimpleSAML_Error_Exception(
-                    "attrauthvoms configuration error: 'blacklist' not an array");
+                    "attrauthvoms configuration error: 'spWhitelist' not an array");
             }
-            $this->blacklist = $config['blacklist'];
+            $this->spWhitelist = $config['spWhitelist'];
         }
 
         if (array_key_exists('voBlacklist', $config)) {
@@ -182,9 +182,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
     {
         try {
             assert(is_array($state));
-            if (isset($state['SPMetadata']['entityid']) && in_array($state['SPMetadata']['entityid'], $this->blacklist, true)) {
+            if (isset($state['SPMetadata']['entityid']) && !in_array($state['SPMetadata']['entityid'], $this->spWhitelist, true)) {
                 SimpleSAML_Logger::debug(
-                    "[attrauthvoms][CertEntitlement] process: Skipping blacklisted SP "
+                    "[attrauthvoms][CertEntitlement] process: Skipping not whitelisted SP "
                     . var_export($state['SPMetadata']['entityid'], true));
                 return;
             }
