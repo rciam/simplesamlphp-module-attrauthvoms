@@ -35,7 +35,7 @@
 class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends SimpleSAML_Auth_ProcessingFilter
 {
     // List of SP entity IDs that should be excluded from this filter.
-    private $spWhitelist = array();
+    private $spWhitelist = null;
 
     private $userIdAttribute = 'distinguishedName';
 
@@ -174,7 +174,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
     {
         try {
             assert(is_array($state));
-            if (isset($state['SPMetadata']['entityid']) && !in_array($state['SPMetadata']['entityid'], $this->spWhitelist, true)) {
+            if (isset($state['SPMetadata']['entityid']) && isset($this->spWhitelist) && !in_array($state['SPMetadata']['entityid'], $this->spWhitelist, true)) {
                 SimpleSAML_Logger::debug(
                     "[attrauthvoms][CertEntitlement] process: Skipping not whitelisted SP "
                     . var_export($state['SPMetadata']['entityid'], true));
