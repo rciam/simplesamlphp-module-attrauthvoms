@@ -1,40 +1,176 @@
-# simplesamlphp-module-attrauthcomanage
-A SimpleSAMLphp module for retrieving attributes from [COmanage Registry](https://spaces.internet2.edu/display/COmanage/Home) and adding them to the list of attributes received from the identity provider. 
+# simplesamlphp-module-attrauthvoms
 
-In a nuthshell, this module provides a set of SimpleSAMLphp authentication processing filters allowing to use COmanage Registry as an Attribute Authority. Specifically, the module supports retrieving the following user information from COmanage:
-  * CO person profile information, including login identifiers
-  * CO group membership information, which is encapsulated in `eduPersonEntitlement` attribute values
+A SimpleSAMLphp module for creating entitlements using the user membership
+information that has been retrived from
+[VOMS](http://italiangrid.github.io/voms/documentation/voms-admin-guide/3.7.0/api.html)
+and adding them to the list of attributes received from the identity provider.
 
-To this end, the above information can be retrieved through the COmanage Registry REST API. Support for directly querying the COmanage Registry DB is also foreseen.
+In a nutshell, this module provides a set of SimpleSAMLphp authentication
+procesing filters allowing to use VOMS as an Attribute Authority. Specifically,
+the module supports retrieving the following user information from VOMS:
 
-## COmanage REST API client
-The `attrauthcomanage:COmanageRestClient` authentication processing filter is implemented as a COmanage Registry REST API client. As such, it needs to authenticate via a simple user/password pair transmitted over HTTPS as part of a basic auth flow. For details, see https://spaces.internet2.edu/display/COmanage/REST+API
+- user's certificate subject and issuer DN
+- user's VO membership and role information and create ent, which is
+  encapsulated in `eduPersonEntitlement` attribute values following the
+  [AARC-G002](https://aarc-community.org/guidelines/aarc-g002/) specification
 
-### COmanage configuration
-COmanage Platform Administrators can add and manage API Users via `Platform >> API Users`.
+The information from VOMS must be stored into a SQL table, in order to eliminate
+any delay in the login process. The table should contain the following columns:
+
+```sql
+CREATE TABLE vo_membership (
+    id integer NOT NULL,
+    subject character varying(256) NOT NULL,
+    issuer character varying(256) NOT NULL,
+    vo_id character varying(256) NOT NULL,
+    created timestamp without time zone
+);
+```
+
+## COmanage Database client
+
+The `attrauthvoms:COmanageDbClient` authentication processing filter is
+implemented as a SQL client. This module uses the SimpleSAML\Database library to
+connect to the database. To configure the database connection edit the following
+attributes in the `config.php`:
+
+```php
+    /*
+     * Database connection string.
+     * Ensure that you have the required PDO database driver installed
+     * for your connection string.
+     */
+    'database.dsn' => 'mysql:host=localhost;dbname=saml',
+    /*
+     * SQL database credentials
+     */
+    'database.username' => 'simplesamlphp',
+    'database.password' => 'secret',
+```
+
+Optionally, you can configure a database slave by editing the `database.slaves`
+attribute.
 
 ### SimpleSAMLphp configuration
+
 The following authproc filter configuration options are supported:
-  * `apiBaseURL`: A string to use as the base URL of the COmanage Registry REST API. There is no default value.
-  * `username`: A string to use as the username of the COmanage Registry API user. There is no default value. 
-  * `password`: A string to use as the password of the COmanage Registry API user. There is no default value.
-  * `userIdAttribute`: A string containing the name of the attribute whose value to use for querying the COmanage Registry. Defaults to `"eduPersonPrincipalName"`.
-  * `verifyPeer`: A boolean to indicate whether to verify the SSL certificate of the HTTPS server providing access to the COmanage Registry REST API. Defaults to `true`. 
-  * `urnNamespace`: A string to use as the URN namespace of the generated `eduPersonEntitlement` values containing CO group membership information. Defauls to `"urn:mace:example.org"`.
+
+- `userIdAttribute`: Optional, a string containing the name of the attribute
+  whose value to use for querying the COmanage Registry. Defaults to
+  `distinguishedName`.
+- `blacklist`: Optional, an array of strings that contains the SPs that the
+  module will skip to process.
+- `voBlacklist`: Optional, an array of strings that contains VOs (COUs) for
+  which the module will not generate entitlements.
+
+Note: In case you need to change the format of the entitlements you need to
+modify the source code.
 
 ### Example authproc filter configuration
-```
+
+```php
     authproc = array(
         ...
         '60' => array(
-             'class' => 'attrauthcomanage:COmanageRestClient',
-             'apiBaseURL' => 'https://comanage.example.org/registry',
-             'username' => 'bob',
-             'password' => 'secret',
-             'userIdAttribute => 'eduPersonUniqueId', 
-             'urnNamespace' => 'urn:mace:example.org',
+            'class' => 'attrauthvoms:COmanageDbClient',
+            'userIdAttribute' => 'distinguishedName',
+            'blacklist' => array(
+                'https://www.example.org/sp',
+            ),
+            'voBlacklist' => array(
+                'vo.example.org',
+            ),
         ),
 ```
 
+## COmanage Database client for CertEntiltlement
+
+The `attrauthvoms:COmanageDbClientCertEntitlement` authentication processing
+filter is based on `attrauthvoms:COmanageDbClient` and creates an attribute base
+on the cert_entitlement scheme.
+
+To configure the database connection edit the following attributes in the
+`config.php`:
+
+```php
+    /*
+     * Database connection string.
+     * Ensure that you have the required PDO database driver installed
+     * for your connection string.
+     */
+    'database.dsn' => 'mysql:host=localhost;dbname=saml',
+    /*
+     * SQL database credentials
+     */
+    'database.username' => 'simplesamlphp',
+    'database.password' => 'secret',
+```
+
+Optionally, you can configure a database slave by editing the `database.slaves`
+attribute.
+
+### SimpleSAMLphp configuration
+
+The following authproc filter configuration options are supported:
+
+- `userIdAttribute`: Optional, a string containing the name of the attribute
+  whose value contains the user's certificate subject. Defaults to
+  `distinguishedName`.
+- `attributeName`: Optional, a string containing the name of the attribute whose
+  value will be stored the new entitlement. Defaults to `certEntitlement`.
+- `spWhitelist`: Optional, an array of strings that contains the SPs that the
+  module will process.
+- `voBlacklist`: Optional, an array of strings that contains VOs (COUs) for
+  which the module will not generate entitlements.
+- `defaultRoles`: Optional, an array of strings that contains the roles that all
+  VOs must have.
+- `tableNames`: Optional, an array of strings that contains the SQL tables that
+  the module will retrieve user's VO membership information.
+- `roleUrnNamespace`: Optional, a string containing the URN namespace of the
+  entitlement.
+- `roleAuthority`: Optional, a string containing the authority of the
+  entitlement.
+- `defaultIssuerDn`: Optional, a string containing the value that should be
+  added if the certificate issuer is missing.
+- `allowEmptyRole`: Optional, a boolean value that defines if will be created
+  entitlements without role. Defaults to `false`.
+
+### Example authproc filter configuration
+
+```php
+    authproc = array(
+        ...
+        61 => array(
+            'class' => 'attrauthvoms:COmanageDbClientCertEntitlement',
+            'userIdAttribute' => 'distinguishedName',
+            'attributeName' => 'certEntitlement',
+            'spWhitelist' => array(
+                'https://www.example1.org/sp',
+                'https://www.example2.org/sp',
+            ),
+            'defaultRoles' => array(
+                'member',
+                'vm_operator'
+            ),
+            'allowEmptyRole' => true,
+            'voBlacklist' => array(
+                'vo.example01.org',
+                'vo.example02.org',
+            ),
+            'role_urn_namespace' => 'urn:mace:example.org',
+            'role_authority' => 'www.example.org',
+            'defaultIssuerDn' => '',
+        ),
+```
+
+## Compatibility matrix
+
+This table matches the module version with the supported SimpleSAMLphp version.
+
+| Module | SimpleSAMLphp |
+| :----: | :-----------: |
+|  v1.0  |     v1.14     |
+
 ## License
+
 Licensed under the Apache 2.0 license, for details see `LICENSE`.
