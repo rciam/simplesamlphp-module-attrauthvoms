@@ -15,29 +15,29 @@ use SimpleSAML\XHTML\Template;
  *
  * Example configuration:
  *
- *    authproc = array(
+ *    authproc = [
  *       ...
- *       61 => array(
+ *       61 => [
  *           'class' => 'attrauthvoms:COmanageDbClientCertEntitlement',
  *           'userIdAttribute' => 'distinguishedName',
  *           'attributeName' => 'certEntitlement',
- *           'spWhitelist' => array(
+ *           'spWhitelist' => [
  *               'https://aai-dev.egi.eu/registry/shibboleth',
  *               'https://snf-766637.vm.okeanos.grnet.gr/Shibboleth.sso/Metadata',
  *               'https://am02.pilots.aarc-project.eu/shibboleth',
- *           ),
- *           'defaultRoles' => array(
+ *           ],
+ *           'defaultRoles' => [
  *               'member',
  *               'vm_operator'
- *           ),
- *           'voBlacklist' => array(
+ *           ],
+ *           'voBlacklist' => [
  *               'vo.example01.org',
  *               'vo.example02.org',
- *           ),
+ *           ],
  *           'role_urn_namespace' => 'urn:mace:example.org',
  *           'role_authority' => 'www.example.org',
  *           'defaultIssuerDn' => 'IGTF',
- *       ),
+ *       ],
  *
  * @author Nicolas Liampotis <nliam@grnet.gr>
  * @author nikosev <nikos.ev@hotmail.com>
@@ -60,13 +60,13 @@ class COmanageDbClientCertEntitlement extends ProcessingFilter
         . ' subject = :subject';
 
     // List of VO names that should be excluded from entitlements.
-    private $voBlacklist = array();
+    private $voBlacklist = [];
 
-    private $defaultRoles = array();
+    private $defaultRoles = [];
 
     private $allowEmptyRole = false;
 
-    private $tableNames = array();
+    private $tableNames = [];
 
     private $roleUrnNamespace;
 
@@ -287,7 +287,7 @@ class COmanageDbClientCertEntitlement extends ProcessingFilter
                 $jsonString .= implode(',', $certEntitlements);
                 $jsonString .= "]}";
                 Logger::debug("[attrauthvoms][CertEntitlement] process: jsonString=" . var_export($jsonString, true));
-                $state['Attributes'][$this->attributeName] = array(utf8_encode($jsonString));
+                $state['Attributes'][$this->attributeName] = [utf8_encode($jsonString)];
             }
         } catch (\Exception $e) {
             $this->showException($e);
@@ -299,11 +299,11 @@ class COmanageDbClientCertEntitlement extends ProcessingFilter
         Logger::debug("[attrauthvoms][CertEntitlement] getVOs: userId="
             . var_export($userId, true));
 
-        $result = array();
+        $result = [];
         $db = Database::getInstance();
-        $queryParams = array(
-            'subject' => array($userId, PDO::PARAM_STR),
-        );
+        $queryParams = [
+            'subject' => [$userId, PDO::PARAM_STR],
+        ];
 
         $strParams = [
             ':tableName' => $tableName,

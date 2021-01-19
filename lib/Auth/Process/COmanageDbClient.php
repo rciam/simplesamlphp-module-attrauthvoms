@@ -15,19 +15,19 @@ use SimpleSAML\XHTML\Template;
  *
  * Example configuration:
  *
- *    authproc = array(
+ *    authproc = [
  *       ...
- *       '60' => array(
+ *       '60' => [
  *            'class' => 'attrauthvoms:COmanageDbClient',
  *            'userIdAttribute' => 'distinguishedName',
- *       ),
+ *       ],
  *
  * @author Nicolas Liampotis <nliam@grnet.gr>
  */
 class COmanageDbClient extends ProcessingFilter
 {
     // List of SP entity IDs that should be excluded from this filter.
-    private $blacklist = array();
+    private $blacklist = [];
 
     private $userIdAttribute = 'distinguishedName';
 
@@ -38,7 +38,7 @@ class COmanageDbClient extends ProcessingFilter
         . ' subject = :subject';
 
     // List of VO names that should be excluded from entitlements.
-    private $voBlacklist = array();
+    private $voBlacklist = [];
 
     public function __construct($config, $reserved)
     {
@@ -109,9 +109,9 @@ class COmanageDbClient extends ProcessingFilter
                     if (empty($vo['vo_id']) || in_array($vo['vo_id'], $this->voBlacklist, true)) {
                         continue;
                     }
-                    $roles = array("member", "vm_operator"); // TODO
+                    $roles = ["member", "vm_operator"]; // TODO
                     if (empty($state['Attributes']['eduPersonEntitlement'])) {
-                        $state['Attributes']['eduPersonEntitlement'] = array();
+                        $state['Attributes']['eduPersonEntitlement'] = [];
                     }
                     foreach ($roles as $role) {
                         $entitlement =
@@ -135,11 +135,11 @@ class COmanageDbClient extends ProcessingFilter
         Logger::debug("[attrauthvoms] getVOs: userId="
             . var_export($userId, true));
 
-        $result = array();
+        $result = [];
         $db = Database::getInstance();
-        $queryParams = array(
-            'subject' => array($userId, PDO::PARAM_STR),
-        );
+        $queryParams = [
+            'subject' => [$userId, PDO::PARAM_STR],
+        ];
         $stmt = $db->read($this->voQuery, $queryParams);
         if ($stmt->execute()) {
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {

@@ -14,6 +14,7 @@ This version is compatible with [SimpleSAMLphp v1.17](https://simplesamlphp.org/
 
 - Comply to [PSR-4: Autoloader](https://www.php-fig.org/psr/psr-4/) guidelines
 - Comply to [PSR-12: Extended Coding Style](https://www.php-fig.org/psr/psr-12/) guidelines
+- Apply modern array syntax to comply with [SimpleSAMLphp v1.17](https://simplesamlphp.org/docs/stable/simplesamlphp-upgrade-notes-1.17)
 
 ## [v1.0.0] - 2020-11-11
 
