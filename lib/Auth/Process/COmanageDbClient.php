@@ -1,5 +1,7 @@
 <?php
 
+namespace SimpleSAML\Module\attrauthvoms\Auth\Process;
+
 /**
  * COmanage DB authproc filter.
  *
@@ -14,7 +16,7 @@
  *
  * @author Nicolas Liampotis <nliam@grnet.gr>
  */
-class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_ProcessingFilter
+class COmanageDbClient extends SimpleSAML\Auth\ProcessingFilter
 {
     // List of SP entity IDs that should be excluded from this filter.
     private $blacklist = array();
@@ -37,9 +39,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
 
         if (array_key_exists('userIdAttribute', $config)) {
             if (!is_string($config['userIdAttribute'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthvoms] Configuration error: 'userIdAttribute' not a string literal");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthvoms configuration error: 'userIdAttribute' not a string literal");
             }
             $this->userIdAttribute = $config['userIdAttribute'];
@@ -47,18 +49,18 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
 
         if (array_key_exists('blacklist', $config)) {
             if (!is_array($config['blacklist'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthvoms] Configuration error: 'blacklist' not an array");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthvoms configuration error: 'blacklist' not an array");
             }
             $this->blacklist = $config['blacklist'];
         }
         if (array_key_exists('voBlacklist', $config)) {
             if (!is_array($config['voBlacklist'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthcomanage] Configuration error: 'voBlacklist' not an array");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthcomanage configuration error: 'voBlacklist' not an array");
             }
             $this->voBlacklist = $config['voBlacklist'];
@@ -70,13 +72,13 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
         try {
             assert('is_array($state)');
             if (isset($state['SPMetadata']['entityid']) && in_array($state['SPMetadata']['entityid'], $this->blacklist, true)) {
-                SimpleSAML_Logger::debug(
+                SimpleSAML\Logger::debug(
                     "[attrauthvoms] process: Skipping blacklisted SP "
                     . var_export($state['SPMetadata']['entityid'], true));
                 return;
             }
             if (empty($state['Attributes'][$this->userIdAttribute])) {
-                SimpleSAML_Logger::debug(
+                SimpleSAML\Logger::debug(
                     "[attrauthvoms] process: Skipping user with no '"
                     . var_export($this->userIdAttribute, true). "' attribute");
                 return;
@@ -111,7 +113,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
 
     private function getVOs($userId)
     {
-        SimpleSAML_Logger::debug("[attrauthvoms] getVOs: userId="
+        SimpleSAML\Logger::debug("[attrauthvoms] getVOs: userId="
             . var_export($userId, true));
 
         $result = array();
@@ -124,7 +126,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $result[] = $row;
             }
-            SimpleSAML_Logger::debug("[attrauthvoms] getVOs: result="
+            SimpleSAML\Logger::debug("[attrauthvoms] getVOs: result="
                 . var_export($result, true));
             return $result;
         } else {
@@ -136,8 +138,8 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
 
     private function showException($e)
     {
-        $globalConfig = SimpleSAML_Configuration::getInstance();
-        $t = new SimpleSAML_XHTML_Template($globalConfig, 'attrauthvoms:exception.tpl.php');
+        $globalConfig = SimpleSAML\Configuration::getInstance();
+        $t = new SimpleSAML\XHTML\Template($globalConfig, 'attrauthvoms:exception.tpl.php');
         $t->data['e'] = $e->getMessage();
         $t->show();
         exit();

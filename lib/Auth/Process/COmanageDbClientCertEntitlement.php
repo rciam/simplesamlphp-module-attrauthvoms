@@ -1,5 +1,7 @@
 <?php
 
+namespace SimpleSAML\Module\attrauthvoms\Auth\Process;
+
 /**
  * COmanage DB authproc filter.
  *
@@ -32,7 +34,7 @@
  * @author Nicolas Liampotis <nliam@grnet.gr>
  * @author nikosev <nikos.ev@hotmail.com>
  */
-class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends SimpleSAML_Auth_ProcessingFilter
+class COmanageDbClientCertEntitlement extends SimpleSAML\Auth\ProcessingFilter
 {
     // List of SP entity IDs that should be excluded from this filter.
     private $spWhitelist = null;
@@ -71,9 +73,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
         if (array_key_exists('userIdAttribute', $config)) {
             if (!is_string($config['userIdAttribute'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthvoms][CertEntitlement] Configuration error: 'userIdAttribute' not a string literal");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthvoms configuration error: 'userIdAttribute' not a string literal");
             }
             $this->userIdAttribute = $config['userIdAttribute'];
@@ -81,9 +83,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
         if (array_key_exists('attributeName', $config)) {
             if (!is_string($config['attributeName'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthvoms][CertEntitlement] Configuration error: 'attributeName' not a string literal");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthvoms configuration error: 'attributeName' not a string literal");
             }
             $this->attributeName = $config['attributeName'];
@@ -91,9 +93,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
         if (array_key_exists('spWhitelist', $config)) {
             if (!is_array($config['spWhitelist'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthvoms][CertEntitlement] Configuration error: 'spWhitelist' not an array");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthvoms configuration error: 'spWhitelist' not an array");
             }
             $this->spWhitelist = $config['spWhitelist'];
@@ -101,9 +103,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
         if (array_key_exists('voBlacklist', $config)) {
             if (!is_array($config['voBlacklist'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthcomanage][CertEntitlement] Configuration error: 'voBlacklist' not an array");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthcomanage configuration error: 'voBlacklist' not an array");
             }
             $this->voBlacklist = $config['voBlacklist'];
@@ -111,9 +113,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
         if (array_key_exists('defaultRoles', $config)) {
             if (!is_array($config['defaultRoles'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthcomanage][CertEntitlement] Configuration error: 'defaultRoles' not an array");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthcomanage configuration error: 'defaultRoles' not an array");
             }
             $this->defaultRoles = $config['defaultRoles'];
@@ -121,9 +123,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
         if (array_key_exists('tableNames', $config)) {
             if (!is_array($config['tableNames'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthcomanage][CertEntitlement] Configuration error: 'tableNames' not an array");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthcomanage configuration error: 'tableNames' not an array");
             }
             $this->tableNames = $config['tableNames'];
@@ -131,9 +133,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
         if (array_key_exists('role_urn_namespace', $config)) {
             if (!is_string($config['role_urn_namespace'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthvoms][CertEntitlement] Configuration error: 'role_urn_namespace' not a string literal");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthvoms configuration error: 'role_urn_namespace' not a string literal");
             }
             $this->roleUrnNamespace = $config['role_urn_namespace'];
@@ -141,9 +143,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
         if (array_key_exists('role_authority', $config)) {
             if (!is_string($config['role_authority'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthvoms][CertEntitlement] Configuration error: 'role_authority' not a string literal");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthvoms configuration error: 'role_authority' not a string literal");
             }
             $this->roleAuthority = $config['role_authority'];
@@ -151,9 +153,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
         if (array_key_exists('defaultIssuerDn', $config)) {
             if (!is_string($config['defaultIssuerDn'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthvoms][CertEntitlement] Configuration error: 'defaultIssuerDn' not a string literal");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthvoms configuration error: 'defaultIssuerDn' not a string literal");
             }
             $this->defaultIssuerDn = $config['defaultIssuerDn'];
@@ -161,9 +163,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
         if (array_key_exists('allowEmptyRole', $config)) {
             if (!is_bool($config['allowEmptyRole'])) {
-                SimpleSAML_Logger::error(
+                SimpleSAML\Logger::error(
                     "[attrauthvoms][CertEntitlement] Configuration error: 'allowEmptyRole' not boolean");
-                throw new SimpleSAML_Error_Exception(
+                throw new SimpleSAML\Error\Exception(
                     "attrauthvoms configuration error: 'allowEmptyRole' not a string literal");
             }
             $this->allowEmptyRole = $config['allowEmptyRole'];
@@ -175,13 +177,13 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
         try {
             assert(is_array($state));
             if (isset($state['SPMetadata']['entityid']) && isset($this->spWhitelist) && !in_array($state['SPMetadata']['entityid'], $this->spWhitelist, true)) {
-                SimpleSAML_Logger::debug(
+                SimpleSAML\Logger::debug(
                     "[attrauthvoms][CertEntitlement] process: Skipping not whitelisted SP "
                     . var_export($state['SPMetadata']['entityid'], true));
                 return;
             }
             if (empty($state['Attributes'][$this->userIdAttribute])) {
-                SimpleSAML_Logger::debug(
+                SimpleSAML\Logger::debug(
                     "[attrauthvoms][CertEntitlement] process: Skipping user with no '"
                     . var_export($this->userIdAttribute, true). "' attribute");
                 return;
@@ -194,9 +196,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
                     $vos = $this->getVOs($userId, $tableName);
                     $totalVos = array_merge($totalVos, $vos);
                 }
-                SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement]: vos=" . var_export($totalVos, true));
+                SimpleSAML\Logger::debug("[attrauthvoms][CertEntitlement]: vos=" . var_export($totalVos, true));
                 foreach ($totalVos as $vo) {
-                    SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement]: vo=" . var_export($vo, true));
+                    SimpleSAML\Logger::debug("[attrauthvoms][CertEntitlement]: vo=" . var_export($vo, true));
                     if (empty($vo['vo_id']) || in_array($vo['vo_id'], $this->voBlacklist, true)) {
                         continue;
                     }
@@ -235,7 +237,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
                 $jsonString = "{\"cert_entitlement\": [";
                 $jsonString .= implode(',', $certEntitlements);
                 $jsonString .= "]}";
-                SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement] process: jsonString=" . var_export($jsonString, true));
+                SimpleSAML\Logger::debug("[attrauthvoms][CertEntitlement] process: jsonString=" . var_export($jsonString, true));
                 $state['Attributes'][$this->attributeName] = array(utf8_encode($jsonString));
             }
         } catch (\Exception $e) {
@@ -245,7 +247,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
 
     private function getVOs($userId, $tableName)
     {
-        SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement] getVOs: userId="
+        SimpleSAML\Logger::debug("[attrauthvoms][CertEntitlement] getVOs: userId="
             . var_export($userId, true));
 
         $result = array();
@@ -263,7 +265,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $result[] = $row;
             }
-            SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement] getVOs: result="
+            SimpleSAML\Logger::debug("[attrauthvoms][CertEntitlement] getVOs: result="
                 . var_export($result, true));
             return $result;
         } else {
@@ -280,14 +282,14 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClientCertEntitlement extends S
             . "\"cert_iss\": \"" . (empty($issuerDn) ? $this->defaultIssuerDn : $issuerDn) . "\","
             . "\"eduperson_entitlement\": \"" . $entitlementValue . "\""
             . "}";
-        SimpleSAML_Logger::debug("[attrauthvoms][CertEntitlement]: jsonEntitlement=" . var_export($jsonEntitlement, true));
+        SimpleSAML\Logger::debug("[attrauthvoms][CertEntitlement]: jsonEntitlement=" . var_export($jsonEntitlement, true));
         return array_merge($entitlementArray, [$jsonEntitlement]);
     }
 
     private function showException($e)
     {
-        $globalConfig = SimpleSAML_Configuration::getInstance();
-        $t = new SimpleSAML_XHTML_Template($globalConfig, 'attrauthvoms:exception.tpl.php');
+        $globalConfig = SimpleSAML\Configuration::getInstance();
+        $t = new SimpleSAML\XHTML\Template($globalConfig, 'attrauthvoms:exception.tpl.php');
         $t->data['e'] = $e->getMessage();
         $t->show();
         exit();
