@@ -69,18 +69,18 @@ modify the source code.
 ### Example authproc filter configuration
 
 ```php
-    authproc = array(
+    authproc = [
         ...
-        '60' => array(
+        '60' => [
             'class' => 'attrauthvoms:COmanageDbClient',
             'userIdAttribute' => 'distinguishedName',
-            'blacklist' => array(
+            'blacklist' => [
                 'https://www.example.org/sp',
-            ),
-            'voBlacklist' => array(
+            ],
+            'voBlacklist' => [
                 'vo.example.org',
-            ),
-        ),
+            ],
+        ],
 ```
 
 ## COmanage Database client for CertEntiltlement
@@ -138,29 +138,29 @@ The following authproc filter configuration options are supported:
 ### Example authproc filter configuration
 
 ```php
-    authproc = array(
+    authproc = [
         ...
-        61 => array(
+        61 => [
             'class' => 'attrauthvoms:COmanageDbClientCertEntitlement',
             'userIdAttribute' => 'distinguishedName',
             'attributeName' => 'certEntitlement',
-            'spWhitelist' => array(
+            'spWhitelist' => [
                 'https://www.example1.org/sp',
                 'https://www.example2.org/sp',
-            ),
-            'defaultRoles' => array(
+            ],
+            'defaultRoles' => [
                 'member',
                 'vm_operator'
-            ),
+            ],
             'allowEmptyRole' => true,
-            'voBlacklist' => array(
+            'voBlacklist' => [
                 'vo.example01.org',
                 'vo.example02.org',
-            ),
+            ],
             'role_urn_namespace' => 'urn:mace:example.org',
             'role_authority' => 'www.example.org',
             'defaultIssuerDn' => '',
-        ),
+        ],
 ```
 
 ## Compatibility matrix
@@ -169,7 +169,8 @@ This table matches the module version with the supported SimpleSAMLphp version.
 
 | Module | SimpleSAMLphp |
 | :----: | :-----------: |
-|  v1.0  |     v1.14     |
+|  v1.x  |     v1.14     |
+|  v2.x  |     v1.17     |
 
 ## License
 
