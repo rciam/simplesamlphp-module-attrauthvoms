@@ -1,23 +1,33 @@
 <?php
 
+namespace SimpleSAML\Module\attrauthvoms\Auth\Process;
+
+use PDO;
+use SimpleSAML\Auth\ProcessingFilter;
+use SimpleSAML\Configuration;
+use SimpleSAML\Database;
+use SimpleSAML\Error;
+use SimpleSAML\Logger;
+use SimpleSAML\XHTML\Template;
+
 /**
  * COmanage DB authproc filter.
  *
  * Example configuration:
  *
- *    authproc = array(
+ *    authproc = [
  *       ...
- *       '60' => array(
+ *       '60' => [
  *            'class' => 'attrauthvoms:COmanageDbClient',
  *            'userIdAttribute' => 'distinguishedName',
- *       ),
+ *       ],
  *
  * @author Nicolas Liampotis <nliam@grnet.gr>
  */
-class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_ProcessingFilter
+class COmanageDbClient extends ProcessingFilter
 {
     // List of SP entity IDs that should be excluded from this filter.
-    private $blacklist = array();
+    private $blacklist = [];
 
     private $userIdAttribute = 'distinguishedName';
 
@@ -28,7 +38,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
         . ' subject = :subject';
 
     // List of VO names that should be excluded from entitlements.
-    private $voBlacklist = array();
+    private $voBlacklist = [];
 
     public function __construct($config, $reserved)
     {
@@ -37,29 +47,35 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
 
         if (array_key_exists('userIdAttribute', $config)) {
             if (!is_string($config['userIdAttribute'])) {
-                SimpleSAML_Logger::error(
-                    "[attrauthvoms] Configuration error: 'userIdAttribute' not a string literal");
-                throw new SimpleSAML_Error_Exception(
-                    "attrauthvoms configuration error: 'userIdAttribute' not a string literal");
+                Logger::error(
+                    "[attrauthvoms] Configuration error: 'userIdAttribute' not a string literal"
+                );
+                throw new Error\Exception(
+                    "attrauthvoms configuration error: 'userIdAttribute' not a string literal"
+                );
             }
             $this->userIdAttribute = $config['userIdAttribute'];
         }
 
         if (array_key_exists('blacklist', $config)) {
             if (!is_array($config['blacklist'])) {
-                SimpleSAML_Logger::error(
-                    "[attrauthvoms] Configuration error: 'blacklist' not an array");
-                throw new SimpleSAML_Error_Exception(
-                    "attrauthvoms configuration error: 'blacklist' not an array");
+                Logger::error(
+                    "[attrauthvoms] Configuration error: 'blacklist' not an array"
+                );
+                throw new Error\Exception(
+                    "attrauthvoms configuration error: 'blacklist' not an array"
+                );
             }
             $this->blacklist = $config['blacklist'];
         }
         if (array_key_exists('voBlacklist', $config)) {
             if (!is_array($config['voBlacklist'])) {
-                SimpleSAML_Logger::error(
-                    "[attrauthcomanage] Configuration error: 'voBlacklist' not an array");
-                throw new SimpleSAML_Error_Exception(
-                    "attrauthcomanage configuration error: 'voBlacklist' not an array");
+                Logger::error(
+                    "[attrauthcomanage] Configuration error: 'voBlacklist' not an array"
+                );
+                throw new Error\Exception(
+                    "attrauthcomanage configuration error: 'voBlacklist' not an array"
+                );
             }
             $this->voBlacklist = $config['voBlacklist'];
         }
@@ -69,16 +85,21 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
     {
         try {
             assert('is_array($state)');
-            if (isset($state['SPMetadata']['entityid']) && in_array($state['SPMetadata']['entityid'], $this->blacklist, true)) {
-                SimpleSAML_Logger::debug(
+            if (
+                isset($state['SPMetadata']['entityid'])
+                && in_array($state['SPMetadata']['entityid'], $this->blacklist, true)
+            ) {
+                Logger::debug(
                     "[attrauthvoms] process: Skipping blacklisted SP "
-                    . var_export($state['SPMetadata']['entityid'], true));
+                    . var_export($state['SPMetadata']['entityid'], true)
+                );
                 return;
             }
             if (empty($state['Attributes'][$this->userIdAttribute])) {
-                SimpleSAML_Logger::debug(
+                Logger::debug(
                     "[attrauthvoms] process: Skipping user with no '"
-                    . var_export($this->userIdAttribute, true). "' attribute");
+                    . var_export($this->userIdAttribute, true) . "' attribute"
+                );
                 return;
             }
             $userIds = $state['Attributes'][$this->userIdAttribute];
@@ -88,9 +109,9 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
                     if (empty($vo['vo_id']) || in_array($vo['vo_id'], $this->voBlacklist, true)) {
                         continue;
                     }
-                    $roles = array("member", "vm_operator"); // TODO
+                    $roles = ["member", "vm_operator"]; // TODO
                     if (empty($state['Attributes']['eduPersonEntitlement'])) {
-                        $state['Attributes']['eduPersonEntitlement'] = array();
+                        $state['Attributes']['eduPersonEntitlement'] = [];
                     }
                     foreach ($roles as $role) {
                         $entitlement =
@@ -111,24 +132,26 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
 
     private function getVOs($userId)
     {
-        SimpleSAML_Logger::debug("[attrauthvoms] getVOs: userId="
+        Logger::debug("[attrauthvoms] getVOs: userId="
             . var_export($userId, true));
 
-        $result = array();
-        $db = SimpleSAML\Database::getInstance();
-        $queryParams = array(
-            'subject' => array($userId, PDO::PARAM_STR),
-        );
+        $result = [];
+        $db = Database::getInstance();
+        $queryParams = [
+            'subject' => [$userId, PDO::PARAM_STR],
+        ];
         $stmt = $db->read($this->voQuery, $queryParams);
         if ($stmt->execute()) {
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $result[] = $row;
             }
-            SimpleSAML_Logger::debug("[attrauthvoms] getVOs: result="
+            Logger::debug("[attrauthvoms] getVOs: result="
                 . var_export($result, true));
             return $result;
         } else {
-            throw new Exception('Failed to communicate with COmanage Registry: '.var_export($db->getLastError(), true));
+            throw new Error\Exception(
+                'Failed to communicate with COmanage Registry: ' . var_export($db->getLastError(), true)
+            );
         }
 
         return $result;
@@ -136,8 +159,8 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
 
     private function showException($e)
     {
-        $globalConfig = SimpleSAML_Configuration::getInstance();
-        $t = new SimpleSAML_XHTML_Template($globalConfig, 'attrauthvoms:exception.tpl.php');
+        $globalConfig = Configuration::getInstance();
+        $t = new Template($globalConfig, 'attrauthvoms:exception.tpl.php');
         $t->data['e'] = $e->getMessage();
         $t->show();
         exit();
