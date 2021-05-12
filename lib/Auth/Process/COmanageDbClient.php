@@ -33,7 +33,7 @@ class COmanageDbClient extends ProcessingFilter
 
     private $voQuery = 'SELECT'
         . ' DISTINCT(vo_id)'
-        . ' FROM voms_members'
+        . ' FROM cm_voms_members'
         . ' WHERE'
         . ' subject = :subject';
 
