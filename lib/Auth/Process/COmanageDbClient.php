@@ -23,7 +23,7 @@ class sspmod_attrauthvoms_Auth_Process_COmanageDbClient extends SimpleSAML_Auth_
 
     private $voQuery = 'SELECT'
         . ' DISTINCT(vo_id)'
-        . ' FROM voms_members'
+        . ' FROM cm_voms_members'
         . ' WHERE'
         . ' subject = :subject';
 
