@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.1.0] - 2023-01-11
+
+This version is compatible with [SimpleSAMLphp v1.17](https://simplesamlphp.org/docs/1.17/simplesamlphp-changelog)
+
+### Changed
+
+- COmanageDbClientCertEntitlement
+  - Convert output from JSON Object to JSON Array
+- COmanageDbClient
+  - Change table name to `cm_voms_members`
+
 ## [v2.0.0] - 2021-01-22
 
 This version is compatible with [SimpleSAMLphp v1.17](https://simplesamlphp.org/docs/1.17/simplesamlphp-changelog)

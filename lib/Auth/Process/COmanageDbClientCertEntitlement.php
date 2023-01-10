@@ -283,9 +283,9 @@ class COmanageDbClientCertEntitlement extends ProcessingFilter
                 }
             }
             if (count($certEntitlements) > 0) {
-                $jsonString = "{\"cert_entitlement\": [";
+                $jsonString = "[";
                 $jsonString .= implode(',', $certEntitlements);
-                $jsonString .= "]}";
+                $jsonString .= "]";
                 Logger::debug("[attrauthvoms][CertEntitlement] process: jsonString=" . var_export($jsonString, true));
                 $state['Attributes'][$this->attributeName] = [utf8_encode($jsonString)];
             }
